@@ -70,4 +70,4 @@ Feel free to fork this repository, submit issues, or create pull requests. Contr
 This project is **Open Source** and free to use.
 
 ---
-**Made with ❤️ by [Aditya Kumar Gupta]**
+**Made with ❤️ by Aditya Kumar Gupta**
