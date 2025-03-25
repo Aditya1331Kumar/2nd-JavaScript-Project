@@ -1,57 +1,81 @@
-const cells = document.querySelectorAll('.cell');
-const statusText = document.querySelector('.status');
-const resetButton = document.getElementById('reset');
-const scoreA = document.getElementById('scoreA');
-const scoreB = document.getElementById('scoreB');
+document.addEventListener("DOMContentLoaded", () => {
+    const userName = "Aditya"; // Change it to user input if needed
+    document.getElementById("userName").innerText = userName;
 
-let currentPlayer = 'x';
-let board = Array(9).fill(null);
-let gameActive = true;
-let wins = { x: 0, o: 0 };
+    const taskInput = document.getElementById("taskInput");
+    const addTaskBtn = document.getElementById("addTaskBtn");
+    const taskList = document.getElementById("taskList");
+    const taskDate = document.getElementById("taskDate");
+    const selectedDateText = document.getElementById("selectedDate");
+    const progressFill = document.querySelector(".progress-fill");
+    const progressPercent = document.getElementById("progress-percent");
 
-const winningCombinations = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], 
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], 
-    [0, 4, 8], [2, 4, 6]
-];
+    // Set current date in the calendar
+    const today = new Date().toISOString().split('T')[0];
+    taskDate.value = today;
+    selectedDateText.innerText = today;
 
-// Handle cell click
-function handleCellClick(e) {
-    const index = e.target.dataset.index;
-    if (board[index] || !gameActive) return;
+    let tasks = {}; // Store tasks for each date
 
-    board[index] = currentPlayer;
-    e.target.classList.add(currentPlayer);
-    
-    if (checkWinner()) {
-        wins[currentPlayer]++;
-        scoreA.textContent = wins.x;
-        scoreB.textContent = wins.o;
-        gameActive = false;
-    } else if (board.every(cell => cell)) {
-        gameActive = false;
-    } else {
-        currentPlayer = currentPlayer === 'x' ? 'o' : 'x';
-    }
-}
-
-// Check winner
-function checkWinner() {
-    return winningCombinations.some(combination => {
-        const [a, b, c] = combination;
-        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-            [a, b, c].forEach(i => cells[i].classList.add('winning-cell'));
-            return true;
-        }
-        return false;
+    taskDate.addEventListener("change", () => {
+        selectedDateText.innerText = taskDate.value;
+        renderTasks();
     });
-}
 
-resetButton.addEventListener('click', () => {
-    board.fill(null);
-    cells.forEach(cell => cell.className = 'cell');
-    gameActive = true;
-    currentPlayer = 'x';
+    addTaskBtn.addEventListener("click", addTask);
+    taskInput.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") addTask();
+    });
+
+    function addTask() {
+        const taskText = taskInput.value.trim();
+        if (taskText === "") return;
+
+        const date = taskDate.value;
+        if (!tasks[date]) tasks[date] = [];
+
+        tasks[date].push({ text: taskText, completed: false });
+        taskInput.value = "";
+        renderTasks();
+    }
+
+    function renderTasks() {
+        taskList.innerHTML = "";
+        const date = taskDate.value;
+        if (!tasks[date]) return;
+
+        tasks[date].forEach((task, index) => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <input type="checkbox" class="checkbox" ${task.completed ? "checked" : ""}>
+                <span class="task-text">${task.text}</span>
+                <button class="delete">x</button>
+            `;
+
+            li.querySelector(".checkbox").addEventListener("change", (e) => {
+                tasks[date][index].completed = e.target.checked;
+                updateProgress();
+            });
+
+            li.querySelector(".delete").addEventListener("click", () => {
+                tasks[date].splice(index, 1);
+                renderTasks();
+            });
+
+            taskList.appendChild(li);
+        });
+
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const date = taskDate.value;
+        if (!tasks[date]) return;
+
+        const completedTasks = tasks[date].filter(task => task.completed).length;
+        const totalTasks = tasks[date].length;
+        const percentage = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+        progressFill.style.width = percentage + "%";
+        progressPercent.innerText = percentage + "%";
+    }
 });
-
-cells.forEach(cell => cell.addEventListener('click', handleCellClick));
